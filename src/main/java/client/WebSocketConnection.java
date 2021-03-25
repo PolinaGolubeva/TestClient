@@ -7,21 +7,23 @@ import objects.Order;
 import objects.Parking;
 import okhttp3.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class WebSocketConnection {
     private OkHttpClient client ;
     private Request request;
     private WebSocket webSocket;
     private ClientWebSocketListener listener;
-    private List<Parking> parkingList;
+
 
      public WebSocketConnection(String url) {
         client = new OkHttpClient();
         request = new Request.Builder().url(url).build();
         listener = new ClientWebSocketListener(this);
-        parkingList = null;
+        //parkingList = null;
     }
 
     public void init() {
@@ -59,8 +61,8 @@ public class WebSocketConnection {
          for (int i = 0; i < parkingList.size(); i++) {
              System.out.println(parkingList.get(i).toString());
          }
-         this.parkingList = parkingList;
-        System.out.println(this.parkingList.size());
+         //this.parkingList = parkingList;
+        //System.out.println(this.parkingList.size());
     }
 
     public void onParkingGet(Parking parking) {
@@ -68,6 +70,7 @@ public class WebSocketConnection {
         // this is an example
         System.out.println("Received parking update:");
         System.out.println(parking.toString());
+        /*
         for (Parking p : parkingList) {
             if (p.getId().equals(parking.getId())) {
                 parkingList.remove(p);
@@ -75,6 +78,8 @@ public class WebSocketConnection {
                 break;
             }
         }
+        */
+
     }
 
     public void onMessageGet(String message) {
@@ -84,11 +89,18 @@ public class WebSocketConnection {
         System.out.println(message);
     }
 
-    public void onError(String message) {
+    public void onOrderIdGet(String message) {
+         int split = message.indexOf('|');
+         Long oldId = Long.parseLong(message.substring(0, split));
+         Long newId = Long.parseLong(message.substring(split + 1));
+        System.out.println("Order id change. Old: " + oldId + "; new: " + newId);
+    }
+
+    public void onError(String error) {
         // place here your code
         // this is an example
         System.out.println("Received error message");
-        System.out.println(message);
+        System.out.println(error);
     }
 
     public void close() {
@@ -103,6 +115,7 @@ public class WebSocketConnection {
     }
 
     public List<Parking> getParkingList() {
-         return this.parkingList;
+         //return this.parkingList;
+        return null
     }
 }

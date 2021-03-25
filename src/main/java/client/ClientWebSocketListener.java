@@ -7,6 +7,7 @@ import objects.Parking;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
+import okio.ByteString;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
@@ -27,6 +28,10 @@ public class ClientWebSocketListener extends WebSocketListener {
 
     public void onMessage(WebSocket webSocket, String text) {
         parseMessage(text);
+    }
+
+    public void onMessage(WebSocket webSocket, ByteString bytes) {
+        parseByteString(bytes);
     }
 
     public void onClosed(WebSocket webSocket, int code, String reason){
@@ -65,5 +70,16 @@ public class ClientWebSocketListener extends WebSocketListener {
             message = message.replace(MessageGenerator.MESSAGE, "");
             connection.onMessageGet(message);
         }
+        if (message.startsWith(MessageGenerator.SEND_ORDER_ID)) {
+            message = message.replace(MessageGenerator.SEND_ORDER_ID, "");
+            connection.onOrderIdGet(message);
+        }
     }
+
+    private void parseByteString(ByteString bytes) {
+        System.out.println("Size if ByteString: " + bytes.getSize$okio());
+        byte[] array = bytes.toByteArray();
+        System.out.println(array.length);
+    }
+
 }
