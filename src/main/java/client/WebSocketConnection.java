@@ -1,28 +1,31 @@
 package client;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import objects.Constants;
 import objects.MessageGenerator;
 import objects.Order;
 import objects.Parking;
 import okhttp3.*;
+import okio.ByteString;
 
-import java.io.File;
-import java.util.ArrayList;
+import javax.swing.*;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Map;
 
 public class WebSocketConnection {
     private OkHttpClient client ;
     private Request request;
     private WebSocket webSocket;
     private ClientWebSocketListener listener;
+    private ParkingService parkingService;
+    private OrderService orderService;
 
-
-     public WebSocketConnection(String url) {
+     public WebSocketConnection(String url, ParkingService parkingService, OrderService orderService) {
         client = new OkHttpClient();
         request = new Request.Builder().url(url).build();
         listener = new ClientWebSocketListener(this);
+        this.parkingService = parkingService;
+        this.orderService = orderService;
         //parkingList = null;
     }
 
@@ -62,6 +65,7 @@ public class WebSocketConnection {
              System.out.println(parkingList.get(i).toString());
          }
          //this.parkingList = parkingList;
+        parkingService.setParkingList(parkingList);
         //System.out.println(this.parkingList.size());
     }
 
@@ -70,6 +74,7 @@ public class WebSocketConnection {
         // this is an example
         System.out.println("Received parking update:");
         System.out.println(parking.toString());
+        parkingService.updateParking(parking);
         /*
         for (Parking p : parkingList) {
             if (p.getId().equals(parking.getId())) {
@@ -93,7 +98,30 @@ public class WebSocketConnection {
          int split = message.indexOf('|');
          Long oldId = Long.parseLong(message.substring(0, split));
          Long newId = Long.parseLong(message.substring(split + 1));
-        System.out.println("Order id change. Old: " + oldId + "; new: " + newId);
+         String getQR = MessageGenerator.GET_QR + newId;
+         this.send(getQR);
+         System.out.println("send qr request: " + getQR);
+    }
+
+    public File onQRGet(ByteString bytes) {
+        try {
+            Long id = bytes.asByteBuffer().getLong();
+            File dir = new File (Constants.PATH_TO_QR);
+            dir.mkdir();
+            File qrFile = new File(dir,"qr" + id + ".png");
+            qrFile.createNewFile();
+            FileOutputStream outputStream = new FileOutputStream(qrFile, false);
+            outputStream.write(bytes.toByteArray(), Long.BYTES, bytes.getSize$okio() - Long.BYTES);
+            outputStream.flush();
+            outputStream.close();
+            System.out.println("QR is received and written at file: " + qrFile.getAbsolutePath());
+            return qrFile;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void onError(String error) {
@@ -116,6 +144,6 @@ public class WebSocketConnection {
 
     public List<Parking> getParkingList() {
          //return this.parkingList;
-        return null
+        return null;
     }
 }

@@ -77,9 +77,7 @@ public class ClientWebSocketListener extends WebSocketListener {
     }
 
     private void parseByteString(ByteString bytes) {
-        System.out.println("Size if ByteString: " + bytes.getSize$okio());
-        byte[] array = bytes.toByteArray();
-        System.out.println(array.length);
+        connection.onQRGet(bytes);
     }
 
 }
